@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-root: #050608;
+    --bg-main: #06070a;
+    --bg-panel: #080a0f;
+    --bg-card: #0b0e15;
+    --bg-card-active: #0f131c;
+    --bg-input: #050609;
+    --bg-input-subtle: #0d1017;
+    --border-subtle: rgba(255, 255, 255, 0.07);
+    --border-medium: rgba(255, 255, 255, 0.12);
+    --accent: #f59e0b;
+    --accent-hover: #fbbf24;
+    --accent-bg: rgba(245, 158, 11, 0.15);
+    --accent-border: rgba(245, 158, 11, 0.4);
+    --accent-text: #fef3c7;
+    --accent-contrast: #000000;
+    --secondary-accent: #06b6d4;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --scrollbar-thumb: #232734;
+  }
+
+  * {
+    border-color: var(--border-subtle);
+  }
+  body {
+    background-color: var(--bg-root);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+  code, pre, .font-mono {
+    font-family: 'Fira Code', monospace;
+  }
+}
+
+/* Custom themed scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-root);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Dynamic Themed Panels & Elements */
+.noir-panel {
+  background: var(--bg-panel);
+  border-color: var(--border-subtle);
+}
+
+.noir-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.noir-card:hover {
+  border-color: var(--accent-border);
+  background: var(--bg-card-active);
+}
+
+.noir-card-active {
+  background: var(--bg-card-active);
+  border-color: var(--accent-border);
+  box-shadow: 0 0 20px -5px var(--accent-bg);
+}
+
+/* Theme accent overrides */
+[data-theme] .bg-amber-500 {
+  background-color: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+}
+[data-theme] .hover\:bg-amber-400:hover {
+  background-color: var(--accent-hover) !important;
+}
+[data-theme] .text-amber-400,
+[data-theme] .text-amber-300 {
+  color: var(--accent) !important;
+}
+[data-theme] .border-amber-500\/50,
+[data-theme] .border-amber-500\/40,
+[data-theme] .border-amber-500\/30 {
+  border-color: var(--accent-border) !important;
+}
+[data-theme] .bg-amber-500\/20,
+[data-theme] .bg-amber-500\/10 {
+  background-color: var(--accent-bg) !important;
+  color: var(--accent-text) !important;
+}
+[data-theme] input[type="range"] {
+  accent-color: var(--accent) !important;
+}
+[data-theme] .peer:checked ~ div {
+  background-color: var(--accent) !important;
+}
