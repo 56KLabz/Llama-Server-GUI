@@ -9,6 +9,8 @@
 
 **Llama Server GUI** is an all-in-one desktop cockpit designed to eliminate the command-line headaches of running `llama.cpp` and `llama-server`. It automatically detects your hardware, tunes your GPU layers, discovers your `.gguf` model files, and gives you a visual dashboard to configure, launch, and monitor local LLM inference at full unthrottled hardware speed.
 
+![Llama Server GUI Interface](assets/screenshot.png)
+
 ---
 
 ## ⚡ 60-Second Quickstart (Beginner Friendly)
