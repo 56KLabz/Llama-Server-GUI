@@ -4,7 +4,7 @@
 
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)](https://github.com/56KLabz/Llama-Server-GUI)
 [![Engine: llama.cpp](https://img.shields.io/badge/Engine-llama.cpp%20%2F%20llama--server-amber)](https://github.com/ggml-org/llama.cpp)
-[![License: MIT](https://img.shields.io/badge/License-MIT-emerald)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-emerald)](LICENSE)
 [![Brought to you by 56kLabz](https://img.shields.io/badge/56kLabz-56klabz.io-amber?logo=terminal)](https://56klabz.io)
 
 **Llama Server GUI** transforms complex command-line flags into an intuitive, high-octane desktop interface. Launch, monitor, and tune local GGUF models on your GPU with zero syntax headaches.
@@ -70,7 +70,7 @@ npm run dist
 ---
 
 ## 🛡️ License
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the Apache 2.0 License. See `LICENSE` for more information.
 
 ---
 
