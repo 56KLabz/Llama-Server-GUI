@@ -116,6 +116,13 @@ The compiled installer will be in the `dist-installer/` directory.
 
 ---
 
+## 🤝 Contributing
+Contributions are what make the open-source community an incredible place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+Please review our [Contributing Guidelines](CONTRIBUTING.md) for branch workflows, development setup, and code standards.
+
+---
+
 ## 🛡️ License
 Distributed under the Apache 2.0 License. See [LICENSE](LICENSE) for more information.
 
