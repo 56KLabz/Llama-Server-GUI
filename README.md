@@ -7,70 +7,117 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-emerald)](LICENSE)
 [![Brought to you by 56kLabz](https://img.shields.io/badge/56kLabz-56klabz.io-amber?logo=terminal)](https://56klabz.io)
 
-**Llama Server GUI** transforms complex command-line flags into an intuitive, high-octane desktop interface. Launch, monitor, and tune local GGUF models on your GPU with zero syntax headaches.
+**Llama Server GUI** is an all-in-one desktop cockpit designed to eliminate the command-line headaches of running `llama.cpp` and `llama-server`. It automatically detects your hardware, tunes your GPU layers, discovers your `.gguf` model files, and gives you a visual dashboard to configure, launch, and monitor local LLM inference at full unthrottled hardware speed.
 
 ---
 
-## ✨ Features
+## ⚡ 60-Second Quickstart (Beginner Friendly)
 
-- ⚙️ **100+ Configurable Flags**: Full visual matrix covering GPU layers, Flash Attention, KV quantization (`q8_0`, `q4_0`), samplers, batch sizes, and multi-model router mode.
-- ⚡ **Live Hardware Telemetry & Auto-Tuning**: Real-time NVIDIA GPU, VRAM, and RAM detection with automatic layer offloading (`-ngl 99`) and continuous VRAM polling.
-- 🔍 **GGUF Asset Vault**: Automatically scans common directories and custom drives for `llama-server`, `llama-cli`, and `.gguf` weights while filtering out unrelated `.bin` files.
-- 🖥️ **Live Command Preview**: Real-time reactive CLI command string builder with syntax highlighting, one-click copy, and script export (`.bat`, `.ps1`, `.json`).
-- 💬 **Built-in API Playground**: Test chat completions directly against your running local server without needing third-party clients.
-- 🎨 **7 Terminal Color Themes**: Switch instantly between **Noir Obsidian**, **Tokyo Night**, **Catppuccin Mocha**, **Dracula Dark**, **Gruvbox Retro**, **Nordic Frost**, and **Cyberpunk Neon** (`Ctrl+T`).
-- 🚀 **Silent Launcher**: Windowless launch mode with zero persistent CMD console windows.
+You don't need to know command-line flags, CUDA syntax, or batching equations to get started.
+
+### Step 1: Install `llama.cpp` (If you don't already have it)
+If you already have `llama-server.exe` (in `C:\llamacpp` or anywhere else), skip this step!
+
+If you are starting fresh on Windows, open PowerShell and run:
+```powershell
+winget install ggml.llamacpp
+```
+*(Or grab the latest pre-compiled CUDA release zip from the [official llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases)).*
 
 ---
 
-## 🛠️ Quick Start
+### Step 2: Download & Install Llama Server GUI
+Download the installer from the [Releases](https://github.com/56KLabz/Llama-Server-GUI/releases) page:
+* **`Llama Server GUI Setup 1.0.0.exe`** — Standard Windows installer with desktop shortcut.
+* **`Llama Server GUI 1.0.0.exe`** — Standalone portable executable (no install required, run from USB or any folder).
 
-### 1. Requirements
-- Windows 10/11 (64-bit)
-- NVIDIA GPU with CUDA drivers (or CPU fallback)
-- [`llama.cpp`](https://github.com/ggml-org/llama.cpp/releases) binaries (`llama-server.exe` / `llama-cli.exe`)
+---
 
-### 2. Download Prebuilt Binaries
-Download the latest Windows installer or portable `.exe` from the [Releases](https://github.com/56KLabz/Llama-Server-GUI/releases) page:
-- `Llama Server GUI Setup 1.0.0.exe` (NSIS Desktop Installer)
-- `Llama Server GUI 1.0.0.exe` (Single-file Portable)
+### Step 3: Launch & Start Chatting
+1. **Launch the App**: The GUI automatically scans your `Downloads`, `Documents`, and system paths for your `llama-server.exe` binary and any `.gguf` models you've downloaded.
+2. **Auto Hardware Detection**: If you have an NVIDIA GPU, it automatically configures all layers (`-ngl 99`) and Flash Attention (`-fa on`) to give you maximum tokens/sec out of the box.
+3. **Click `START SERVER`**: Your local OpenAI-compatible API is now live!
+4. **Chat**: Click the **API Playground** tab (`F3`) at the top to chat with your model immediately.
 
-### 3. Build from Source
-```bash
-# Clone the repository
-git clone https://github.com/56KLabz/Llama-Server-GUI.git
-cd Llama-Server-GUI
+---
 
-# Install dependencies
-npm install
+## 🔌 Connecting to Other Apps (OpenAI Compatible)
 
-# Start in development mode
-npm run dev
-
-# Package production installer & portable exe
-npm run dist
+When your server is running, **Llama Server GUI** hosts a local OpenAI-compatible endpoint at:
+```text
+http://127.0.0.1:8080/v1
 ```
 
+You can plug this URL directly into your favorite AI tools:
+* **OpenWebUI / LibreChat**: Set Base URL to `http://127.0.0.1:8080/v1` (API Key: anything).
+* **VS Code (Continue / Roo Code / Cline)**: Select "OpenAI Compatible" provider and point to port `8080`.
+* **Obsidian (Smart Connections / BMO Chat)**: Use local base URL `http://127.0.0.1:8080/v1`.
+* **SillyTavern**: Select Chat Completion $\rightarrow$ OpenAI $\rightarrow$ `http://127.0.0.1:8080/v1`.
+* **Python / LangChain / AutoGen**:
+  ```python
+  from openai import OpenAI
+  client = OpenAI(base_url="http://127.0.0.1:8080/v1", api_key="not-needed")
+  response = client.chat.completions.create(
+      model="default",
+      messages=[{"role": "user", "content": "Hello!"}]
+  )
+  print(response.choices[0].message.content)
+  ```
+
 ---
 
-## ⌨️ Keyboard Shortcuts
+## ✨ Features Breakdown
+
+- ⚙️ **100+ Configurable Flags**: Full visual control matrix covering GPU layer offloading, Flash Attention, KV Cache Quantization (`q8_0`, `q4_0`), samplers (temp, top-k, min-p, mirostat), context sizes, and multi-model router mode (`--models-dir`).
+- ⚡ **Live Real-Time Hardware Telemetry**: Continuously polls and displays your exact GPU name, active VRAM utilization (`used / total GB`), GPU compute %, and system RAM in real time.
+- 🔍 **Strict GGUF Asset Vault**: Automatically indexes all `.gguf` weights across your drives while strictly ignoring game binaries and unrelated `.bin` files.
+- 🖥️ **Live Command String Builder**: Watch the exact `llama-server.exe <args>` string construct live in a read-only terminal box at the bottom of the screen. Includes one-click copy and export to Windows `.bat`, PowerShell `.ps1`, and JSON config profiles.
+- 💬 **Integrated Chat Playground**: Test your prompt generation and model responses with streaming tokens directly in the app.
+- 🎨 **7 Terminal Themes**: Switch instantly between **Noir Obsidian (Default)**, **Tokyo Night**, **Catppuccin Mocha**, **Dracula Dark**, **Gruvbox Retro**, **Nordic Frost**, and **Cyberpunk Neon** (`Ctrl+T`).
+- 🚀 **Silent Launch Mode**: Native windowless launch via `Launch_GUI.vbs`—zero lingering black CMD console windows.
+
+---
+
+## ⌨️ Keyboard Shortcuts Reference
 
 | Shortcut | Action |
 |---|---|
-| `F1` | Options Matrix Tab |
-| `F2` | Console Logs Tab |
-| `F3` | API Chat Playground Tab |
-| `Ctrl + O` | Browse & Open GGUF Model |
-| `Ctrl + B` | Select Llama Binary |
+| `F1` | Switch to **Options Matrix** |
+| `F2` | Switch to **Console Stream & Logs** |
+| `F3` | Switch to **API Chat Playground** |
+| `Ctrl + O` | Browse & Open GGUF Model File |
+| `Ctrl + B` | Select Llama Executable Binary |
 | `Ctrl + T` | Open Color Themes Palette |
-| `Ctrl + \`` | Toggle Live Command Box |
+| `Ctrl + \`` | Toggle Live Command Preview Bar |
 | `Ctrl + Shift + S` | Open Local Models Vault Scanner |
-| `Ctrl + H` | Ingest Flags from `--help` |
+| `Ctrl + H` | Ingest Flags Dynamically from `--help` |
+
+---
+
+## 🛠️ Building from Source (Developers)
+
+If you'd like to build or modify Llama Server GUI locally:
+
+```bash
+# 1. Clone repository
+git clone https://github.com/56KLabz/Llama-Server-GUI.git
+cd Llama-Server-GUI
+
+# 2. Install dependencies
+npm install
+
+# 3. Launch live hot-reloading dev environment
+npm run dev
+
+# 4. Compile production Windows NSIS installer & portable .exe
+npm run dist
+```
+The compiled installer will be in the `dist-installer/` directory.
 
 ---
 
 ## 🛡️ License
-Distributed under the Apache 2.0 License. See `LICENSE` for more information.
+Distributed under the Apache 2.0 License. See [LICENSE](LICENSE) for more information.
 
 ---
 
