@@ -2,7 +2,7 @@
 
 > **The native, high-performance desktop control deck and flag configurator for `llama-server` and `llama.cpp`.**
 
-[![Platform: Windows](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)](https://github.com/56KLabz/Llama-Server-GUI)
+[![Platform: Windows & Linux](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-0078D6?logo=linux)](https://github.com/56KLabz/Llama-Server-GUI)
 [![Engine: llama.cpp](https://img.shields.io/badge/Engine-llama.cpp%20%2F%20llama--server-amber)](https://github.com/ggml-org/llama.cpp)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-emerald)](LICENSE)
 [![Brought to you by 56kLabz](https://img.shields.io/badge/56kLabz-56klabz.io-amber?logo=terminal)](https://56klabz.io)
@@ -18,20 +18,31 @@
 You don't need to know command-line flags, CUDA syntax, or batching equations to get started.
 
 ### Step 1: Install `llama.cpp` (If you don't already have it)
-If you already have `llama-server.exe` (in `C:\llamacpp` or anywhere else), skip this step!
+If you already have `llama-server` in your PATH or build folder, skip this step!
 
-If you are starting fresh on Windows, open PowerShell and run:
-```powershell
-winget install ggml.llamacpp
-```
-*(Or grab the latest pre-compiled CUDA release zip from the [official llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases)).*
+* **On Windows**: Open PowerShell and run:
+  ```powershell
+  winget install ggml.llamacpp
+  ```
+  *(Or download CUDA release zips from [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases)).*
+
+* **On Linux (Ubuntu / Debian / Arch / Fedora)**:
+  ```bash
+  # Clone and build with CUDA
+  git clone https://github.com/ggml-org/llama.cpp
+  cd llama.cpp && cmake -B build -DGGML_CUDA=ON && cmake --build build --config Release -j
+  ```
 
 ---
 
 ### Step 2: Download & Install Llama Server GUI
-Download the installer from the [Releases](https://github.com/56KLabz/Llama-Server-GUI/releases) page:
-* **`Llama Server GUI Setup 1.0.0.exe`** — Standard Windows installer with desktop shortcut.
-* **`Llama Server GUI 1.0.0.exe`** — Standalone portable executable (no install required, run from USB or any folder).
+Download the build for your platform from the [Releases](https://github.com/56KLabz/Llama-Server-GUI/releases) page:
+* **Windows**:
+  * `Llama Server GUI Setup 1.0.0.exe` (Standard Windows installer)
+  * `Llama Server GUI 1.0.0.exe` (Portable executable)
+* **Linux**:
+  * `Llama-Server-GUI-1.0.0.AppImage` (Universal Linux executable — `chmod +x` and double click)
+  * `llama-server-gui_1.0.0_amd64.deb` (Ubuntu / Debian package)
 
 ---
 

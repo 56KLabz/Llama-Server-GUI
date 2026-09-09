@@ -161,13 +161,25 @@ ipcMain.handle('dialog:openDirectory', async () => {
 });
 
 ipcMain.handle('dialog:saveFile', async (event, options = {}) => {
+  const isWin = process.platform === 'win32';
+  const defaultExt = isWin ? 'run_llama.bat' : 'run_llama.sh';
   const result = await dialog.showSaveDialog(mainWindow, {
-    defaultPath: options.defaultPath || 'run_llama.bat',
-    filters: options.filters || [{ name: 'Batch Script', extensions: ['bat'] }, { name: 'PowerShell Script', extensions: ['ps1'] }, { name: 'JSON Profile', extensions: ['json'] }]
+    defaultPath: options.defaultPath || defaultExt,
+    filters: options.filters || [
+      { name: 'Shell Script', extensions: ['sh'] },
+      { name: 'Batch Script', extensions: ['bat'] },
+      { name: 'PowerShell Script', extensions: ['ps1'] },
+      { name: 'JSON Profile', extensions: ['json'] }
+    ]
   });
   if (!result.canceled && result.filePath) {
     if (options.content) {
       fs.writeFileSync(result.filePath, options.content, 'utf8');
+      if (process.platform !== 'win32' && result.filePath.endsWith('.sh')) {
+        try {
+          fs.chmodSync(result.filePath, 0o755);
+        } catch (e) {}
+      }
     }
     return result.filePath;
   }
@@ -206,6 +218,7 @@ ipcMain.handle('llama:scanAssets', async (event, customSearchDirs = []) => {
   const userHome = os.homedir();
   const searchDirs = new Set([
     ...customSearchDirs,
+    // Windows paths
     'C:\\llamacpp',
     'C:\\llamacpp\\build\\bin',
     'C:\\llama',
@@ -215,6 +228,16 @@ ipcMain.handle('llama:scanAssets', async (event, customSearchDirs = []) => {
     'D:\\models',
     'E:\\models',
     'C:\\ai\\models',
+    // Linux / POSIX paths
+    '/usr/local/bin',
+    '/usr/bin',
+    '/opt/llamacpp',
+    path.join(userHome, '.local', 'bin'),
+    path.join(userHome, 'llama.cpp'),
+    path.join(userHome, 'llama.cpp', 'build', 'bin'),
+    path.join(userHome, 'llamacpp'),
+    path.join(userHome, 'models'),
+    // Cross-platform home folders
     path.join(userHome, 'Downloads'),
     path.join(userHome, 'Documents'),
     path.join(userHome, 'Projects'),
@@ -440,32 +463,55 @@ ipcMain.handle('system:getInfo', async () => {
         }
       }
 
-      // If no NVIDIA GPU found via nvidia-smi, check Windows WMI / DirectX
+      // If no NVIDIA GPU found via nvidia-smi, check platform-specific fallbacks
       if (gpus.length === 0) {
-        exec('powershell -NoProfile -Command "Get-CimInstance Win32_VideoController | Select-Object -Property Name, AdapterRAM | ConvertTo-Json"', (wErr, wStdout) => {
-          try {
-            if (wStdout) {
-              const parsed = JSON.parse(wStdout);
-              const list = Array.isArray(parsed) ? parsed : [parsed];
-              for (const g of list) {
-                if (g && g.Name && !g.Name.toLowerCase().includes('remote') && !g.Name.toLowerCase().includes('virtual')) {
-                  const bytes = typeof g.AdapterRAM === 'number' ? g.AdapterRAM : parseInt(g.AdapterRAM);
-                  const vramGB = bytes && bytes > 0 ? Number((bytes / (1024 * 1024 * 1024)).toFixed(1)) : null;
-                  gpus.push({ name: g.Name, vramGB });
+        if (process.platform === 'win32') {
+          exec('powershell -NoProfile -Command "Get-CimInstance Win32_VideoController | Select-Object -Property Name, AdapterRAM | ConvertTo-Json"', (wErr, wStdout) => {
+            try {
+              if (wStdout) {
+                const parsed = JSON.parse(wStdout);
+                const list = Array.isArray(parsed) ? parsed : [parsed];
+                for (const g of list) {
+                  if (g && g.Name && !g.Name.toLowerCase().includes('remote') && !g.Name.toLowerCase().includes('virtual')) {
+                    const bytes = typeof g.AdapterRAM === 'number' ? g.AdapterRAM : parseInt(g.AdapterRAM);
+                    const vramGB = bytes && bytes > 0 ? Number((bytes / (1024 * 1024 * 1024)).toFixed(1)) : null;
+                    gpus.push({ name: g.Name, vramGB });
+                  }
+                }
+              }
+            } catch (e) {}
+
+            resolve({
+              totalMemGB,
+              freeMemGB,
+              usedMemGB,
+              cpuModel,
+              cpuCores,
+              gpus
+            });
+          });
+        } else {
+          // Linux fallback: check lspci for VGA/3D controller (AMD, Intel, etc.)
+          exec('lspci | grep -E -i "vga|3d|display"', (lErr, lStdout) => {
+            if (!lErr && lStdout && lStdout.trim()) {
+              const lines = lStdout.trim().split(/\r?\n/);
+              for (const line of lines) {
+                const clean = line.replace(/^[0-9a-f:.]+\s+[^:]+:\s+/i, '').trim();
+                if (clean) {
+                  gpus.push({ name: clean, vramGB: null });
                 }
               }
             }
-          } catch (e) {}
-
-          resolve({
-            totalMemGB,
-            freeMemGB,
-            usedMemGB,
-            cpuModel,
-            cpuCores,
-            gpus
+            resolve({
+              totalMemGB,
+              freeMemGB,
+              usedMemGB,
+              cpuModel,
+              cpuCores,
+              gpus
+            });
           });
-        });
+        }
       } else {
         resolve({
           totalMemGB,

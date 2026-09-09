@@ -149,6 +149,19 @@ export const CommandLineBar: React.FC<CommandLineBarProps> = ({
           </button>
 
           <button
+            onClick={() => onExportScript('sh')}
+            className="px-2 py-1 text-[11px] font-medium rounded text-slate-300 border transition-all flex items-center gap-1 cursor-pointer hover:border-white/20"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-subtle)'
+            }}
+            title="Export as Linux / Bash .SH"
+          >
+            <Terminal className="w-3 h-3 text-amber-400" />
+            <span>.SH</span>
+          </button>
+
+          <button
             onClick={() => onExportScript('ps1')}
             className="px-2 py-1 text-[11px] font-medium rounded text-slate-300 border transition-all flex items-center gap-1 cursor-pointer hover:border-white/20"
             style={{
