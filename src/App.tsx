@@ -136,6 +136,15 @@ export function App() {
     }
   };
 
+  // Stable callbacks for FlagCard to leverage React.memo optimization
+  const handleToggleFlag = React.useCallback((flagId: string, enabled: boolean) => {
+    setEnabledFlags(prev => ({ ...prev, [flagId]: enabled }));
+  }, []);
+
+  const handleChangeFlagValue = React.useCallback((flagId: string, val: any) => {
+    setFlagValues(prev => ({ ...prev, [flagId]: val }));
+  }, []);
+
   useEffect(() => {
     if (window.llamaAPI) {
       window.llamaAPI.getSystemInfo().then((info) => {
@@ -546,12 +555,8 @@ export function App() {
                       flag={flag}
                       value={flagValues[flag.id]}
                       isEnabled={!!enabledFlags[flag.id]}
-                      onToggle={(enabled) => {
-                        setEnabledFlags(prev => ({ ...prev, [flag.id]: enabled }));
-                      }}
-                      onChangeValue={(val) => {
-                        setFlagValues(prev => ({ ...prev, [flag.id]: val }));
-                      }}
+                      onToggle={handleToggleFlag}
+                      onChangeValue={handleChangeFlagValue}
                       onBrowseFile={handleBrowseFile}
                       onBrowseDirectory={handleBrowseDirectory}
                     />
