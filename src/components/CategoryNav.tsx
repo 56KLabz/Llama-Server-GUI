@@ -44,7 +44,7 @@ interface CategoryNavProps {
   onEnableAllQuick: () => void;
 }
 
-export const CategoryNav: React.FC<CategoryNavProps> = ({
+export const CategoryNav: React.FC<CategoryNavProps> = React.memo(({
   activeCategory,
   onSelectCategory,
   searchQuery,
@@ -53,17 +53,24 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   enabledFlags,
   onResetAll
 }) => {
-  const activeCountTotal = Object.values(enabledFlags).filter(Boolean).length;
+  const activeCountTotal = React.useMemo(() => {
+    return Object.values(enabledFlags).filter(Boolean).length;
+  }, [enabledFlags]);
 
-  const getCategoryActiveCount = (catId: FlagCategory) => {
-    return flags
-      .filter(f => f.category === catId && enabledFlags[f.id])
-      .length;
-  };
+  // Precompute category active & total counts in a single O(N) pass
+  const { categoryActiveCounts, categoryTotalCounts } = React.useMemo(() => {
+    const activeCounts: Record<string, number> = {};
+    const totalCounts: Record<string, number> = {};
 
-  const getCategoryTotalCount = (catId: FlagCategory) => {
-    return flags.filter(f => f.category === catId).length;
-  };
+    for (const flag of flags) {
+      totalCounts[flag.category] = (totalCounts[flag.category] || 0) + 1;
+      if (enabledFlags[flag.id]) {
+        activeCounts[flag.category] = (activeCounts[flag.category] || 0) + 1;
+      }
+    }
+
+    return { categoryActiveCounts: activeCounts, categoryTotalCounts: totalCounts };
+  }, [flags, enabledFlags]);
 
   return (
     <aside className="w-72 bg-[#06080c] border-r border-slate-800/90 flex flex-col h-full shrink-0 shadow-2xl">
@@ -130,8 +137,8 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
 
         {CATEGORIES.map((cat) => {
           const Icon = ICON_MAP[cat.iconName] || Sliders;
-          const activeInCat = getCategoryActiveCount(cat.id);
-          const totalInCat = getCategoryTotalCount(cat.id);
+          const activeInCat = categoryActiveCounts[cat.id] || 0;
+          const totalInCat = categoryTotalCounts[cat.id] || 0;
 
           if (totalInCat === 0 && cat.id === 'custom') return null;
 
@@ -176,4 +183,4 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
       </div>
     </aside>
   );
-};
+});

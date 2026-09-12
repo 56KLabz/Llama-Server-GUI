@@ -14,13 +14,14 @@ interface FlagCardProps {
   flag: FlagDefinition;
   value: any;
   isEnabled: boolean;
-  onToggle: (enabled: boolean) => void;
-  onChangeValue: (val: any) => void;
+  onToggle: (flagId: string, enabled: boolean) => void;
+  onChangeValue: (flagId: string, val: any) => void;
   onBrowseFile?: (flagId: string, filters?: { name: string; extensions: string[] }[]) => void;
   onBrowseDirectory?: (flagId: string) => void;
 }
 
-export const FlagCard: React.FC<FlagCardProps> = ({
+// Memoized to prevent re-rendering unchanged cards when system info polls or other flags update.
+export const FlagCard: React.FC<FlagCardProps> = React.memo(({
   flag,
   value,
   isEnabled,
@@ -42,7 +43,7 @@ export const FlagCard: React.FC<FlagCardProps> = ({
 
   const handleReset = () => {
     if (flag.defaultValue !== undefined) {
-      onChangeValue(flag.defaultValue);
+      onChangeValue(flag.id, flag.defaultValue);
     }
   };
 
@@ -94,7 +95,7 @@ export const FlagCard: React.FC<FlagCardProps> = ({
               <input
                 type="checkbox"
                 checked={isEnabled}
-                onChange={(e) => onToggle(e.target.checked)}
+                onChange={(e) => onToggle(flag.id, e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-9 h-5 bg-slate-800/90 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-amber-900 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 peer-checked:after:bg-black after:border-slate-400 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500 shadow-inner"></div>
@@ -118,8 +119,8 @@ export const FlagCard: React.FC<FlagCardProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onChangeValue(true);
-                  if (!isEnabled) onToggle(true);
+                  onChangeValue(flag.id, true);
+                  if (!isEnabled) onToggle(flag.id, true);
                 }}
                 className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
                   currentValue === true && isEnabled
@@ -132,8 +133,8 @@ export const FlagCard: React.FC<FlagCardProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onChangeValue(false);
-                  onToggle(false);
+                  onChangeValue(flag.id, false);
+                  onToggle(flag.id, false);
                 }}
                 className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
                   !isEnabled || currentValue === false
@@ -163,8 +164,8 @@ export const FlagCard: React.FC<FlagCardProps> = ({
                   value={currentValue}
                   onChange={(e) => {
                     const val = e.target.value === '' ? '' : parseFloat(e.target.value);
-                    onChangeValue(val);
-                    if (!isEnabled) onToggle(true);
+                    onChangeValue(flag.id, val);
+                    if (!isEnabled) onToggle(flag.id, true);
                   }}
                   className="w-24 bg-[#0d1017] border border-slate-800 focus:border-amber-500/60 rounded px-2 py-0.5 text-xs text-right font-mono text-amber-300 focus:outline-none focus:ring-1 focus:ring-amber-500/40 shadow-inner"
                 />
@@ -190,8 +191,8 @@ export const FlagCard: React.FC<FlagCardProps> = ({
                   step={flag.step || 1}
                   value={typeof currentValue === 'number' ? currentValue : flag.min}
                   onChange={(e) => {
-                    onChangeValue(parseFloat(e.target.value));
-                    if (!isEnabled) onToggle(true);
+                    onChangeValue(flag.id, parseFloat(e.target.value));
+                    if (!isEnabled) onToggle(flag.id, true);
                   }}
                   className="w-full h-1.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-500"
                 />
@@ -209,8 +210,8 @@ export const FlagCard: React.FC<FlagCardProps> = ({
                 placeholder="Choose file or enter path..."
                 value={currentValue || ''}
                 onChange={(e) => {
-                  onChangeValue(e.target.value);
-                  if (e.target.value && !isEnabled) onToggle(true);
+                  onChangeValue(flag.id, e.target.value);
+                  if (e.target.value && !isEnabled) onToggle(flag.id, true);
                 }}
                 className="flex-1 bg-[#0d1017] border border-slate-800 focus:border-amber-500/60 rounded px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500/40 shadow-inner"
               />
@@ -239,8 +240,8 @@ export const FlagCard: React.FC<FlagCardProps> = ({
                 placeholder="Choose directory path..."
                 value={currentValue || ''}
                 onChange={(e) => {
-                  onChangeValue(e.target.value);
-                  if (e.target.value && !isEnabled) onToggle(true);
+                  onChangeValue(flag.id, e.target.value);
+                  if (e.target.value && !isEnabled) onToggle(flag.id, true);
                 }}
                 className="flex-1 bg-[#0d1017] border border-slate-800 focus:border-amber-500/60 rounded px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500/40 shadow-inner"
               />
@@ -270,13 +271,13 @@ export const FlagCard: React.FC<FlagCardProps> = ({
                   key={opt}
                   type="button"
                   onClick={() => {
-                    onChangeValue(opt);
-                    if (!isEnabled) onToggle(true);
+                    onChangeValue(flag.id, opt);
+                    if (!isEnabled) onToggle(flag.id, true);
                   }}
                   className={`px-2 py-0.5 text-xs rounded font-medium transition-all cursor-pointer ${
                     currentValue === opt && isEnabled
                       ? 'bg-amber-500 text-black font-bold shadow-sm'
-                      : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                      : 'bg-slate-900 text-slate-400 hover:text-[#f1f5f9] border border-slate-800'
                   }`}
                 >
                   {opt}
@@ -294,8 +295,8 @@ export const FlagCard: React.FC<FlagCardProps> = ({
               placeholder={`Enter value for ${flag.flag}...`}
               value={currentValue || ''}
               onChange={(e) => {
-                onChangeValue(e.target.value);
-                if (e.target.value && !isEnabled) onToggle(true);
+                onChangeValue(flag.id, e.target.value);
+                if (e.target.value && !isEnabled) onToggle(flag.id, true);
               }}
               className="w-full bg-[#0d1017] border border-slate-800 focus:border-amber-500/60 rounded px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500/40 shadow-inner"
             />
@@ -327,4 +328,4 @@ export const FlagCard: React.FC<FlagCardProps> = ({
       </div>
     </div>
   );
-};
+});
