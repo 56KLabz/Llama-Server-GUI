@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileSearch, Sparkles, X, Terminal, CheckCircle2, AlertCircle } from 'lucide-react';
 import { FlagDefinition } from '../data/llamaFlags';
 import { parseHelpOutput } from '../utils/helpParser';
+import { apiBridge } from '../utils/apiBridge';
 
 interface HelpExtractorModalProps {
   isOpen: boolean;
@@ -42,17 +43,13 @@ export const HelpExtractorModal: React.FC<HelpExtractorModalProps> = ({
     setStatusMsg(null);
 
     try {
-      if (window.llamaAPI?.extractHelp) {
-        const res = await window.llamaAPI.extractHelp(binaryPath);
-        if (res.success && res.output) {
-          setHelpText(res.output);
-          const parsed = parseHelpOutput(res.output);
-          setStatusMsg({ type: 'success', text: `Successfully extracted ${parsed.length} options from binary!` });
-        } else {
-          setStatusMsg({ type: 'error', text: res.error || 'Failed to extract --help from binary.' });
-        }
+      const res = await apiBridge.extractHelp(binaryPath);
+      if (res.success && res.output) {
+        setHelpText(res.output);
+        const parsed = parseHelpOutput(res.output);
+        setStatusMsg({ type: 'success', text: `Successfully extracted ${parsed.length} options from binary!` });
       } else {
-        setStatusMsg({ type: 'error', text: 'Electron IPC is not available in browser mode.' });
+        setStatusMsg({ type: 'error', text: res.error || 'Failed to extract --help from binary.' });
       }
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: err.message });

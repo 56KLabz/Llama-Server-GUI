@@ -20,6 +20,7 @@ import { AboutModal } from './components/AboutModal';
 import { ThemeModal } from './components/ThemeModal';
 import { ThemeId, applyTheme } from './data/themes';
 import { LogEntry, SystemInfo, DiscoveredAssets, DiscoveredModel, DiscoveredBinary } from './types';
+import { apiBridge } from './utils/apiBridge';
 
 export function App() {
   // App state
@@ -112,98 +113,94 @@ export function App() {
 
   // Initial scan and IPC setup
   const runAutoScan = async (foldersToScan?: string[]) => {
-    if (window.llamaAPI?.scanAssets) {
-      setIsScanning(true);
-      try {
-        const found = await window.llamaAPI.scanAssets(foldersToScan || customFolders);
-        setAssets(found);
+    setIsScanning(true);
+    try {
+      const found = await apiBridge.scanAssets(foldersToScan || customFolders);
+      setAssets(found);
 
-        // Auto-select first discovered binary if none selected
-        if (!binaryPath && found.binaries.length > 0) {
-          setBinaryPath(found.binaries[0].path);
-        }
-
-        // Auto-select first model if none selected
-        if (!flagValues['model'] && found.models.length > 0) {
-          setFlagValues(prev => ({ ...prev, model: found.models[0].path }));
-          setEnabledFlags(prev => ({ ...prev, model: true }));
-        }
-      } catch (err) {
-        console.error('Scan failed:', err);
-      } finally {
-        setIsScanning(false);
+      // Auto-select first discovered binary if none selected
+      if (!binaryPath && found.binaries.length > 0) {
+        setBinaryPath(found.binaries[0].path);
       }
+
+      // Auto-select first model if none selected
+      if (!flagValues['model'] && found.models.length > 0) {
+        setFlagValues(prev => ({ ...prev, model: found.models[0].path }));
+        setEnabledFlags(prev => ({ ...prev, model: true }));
+      }
+    } catch (err) {
+      console.error('Scan failed:', err);
+    } finally {
+      setIsScanning(false);
     }
   };
 
   useEffect(() => {
-    if (window.llamaAPI) {
-      window.llamaAPI.getSystemInfo().then((info) => {
-        setSystemInfo(info);
-        if (info && info.gpus && info.gpus.length > 0 && info.gpus.some(g => g.name && !g.name.toLowerCase().includes('remote') && !g.name.toLowerCase().includes('virtual'))) {
-          setFlagValues(prev => ({
-            ...prev,
-            n_gpu_layers: (prev.n_gpu_layers !== undefined && prev.n_gpu_layers !== 0) ? prev.n_gpu_layers : 99,
-            flash_attn: prev.flash_attn || 'on'
-          }));
-          setEnabledFlags(prev => ({
-            ...prev,
-            n_gpu_layers: true,
-            flash_attn: true
-          }));
-        }
-      }).catch(() => {});
+    apiBridge.getSystemInfo().then((info) => {
+      setSystemInfo(info);
+      if (info && info.gpus && info.gpus.length > 0 && info.gpus.some(g => g.name && !g.name.toLowerCase().includes('remote') && !g.name.toLowerCase().includes('virtual'))) {
+        setFlagValues(prev => ({
+          ...prev,
+          n_gpu_layers: (prev.n_gpu_layers !== undefined && prev.n_gpu_layers !== 0) ? prev.n_gpu_layers : 99,
+          flash_attn: prev.flash_attn || 'on'
+        }));
+        setEnabledFlags(prev => ({
+          ...prev,
+          n_gpu_layers: true,
+          flash_attn: true
+        }));
+      }
+    }).catch(() => {});
 
-      window.llamaAPI.isRunning().then(setIsRunning).catch(() => {});
-      runAutoScan();
+    apiBridge.isRunning().then(setIsRunning).catch(() => {});
+    runAutoScan();
 
-      const unbindLog = window.llamaAPI.onLog((data) => {
-        const entry: LogEntry = {
-          id: Math.random().toString(36).substring(2, 9),
-          timestamp: new Date().toLocaleTimeString(),
-          type: data.type,
-          text: data.text
-        };
-        setLogs(prev => [...prev.slice(-2000), entry]);
-      });
-
-      const unbindStatus = window.llamaAPI.onStatus((data) => {
-        if (data.state === 'stopped') {
-          setIsRunning(false);
-          setLogs(prev => [
-            ...prev,
-            {
-              id: Math.random().toString(36).substring(2, 9),
-              timestamp: new Date().toLocaleTimeString(),
-              type: 'system',
-              text: `[SYSTEM] Process stopped (Exit code: ${data.exitCode})`
-            }
-          ]);
-        } else if (data.state === 'error') {
-          setIsRunning(false);
-          setLogs(prev => [
-            ...prev,
-            {
-              id: Math.random().toString(36).substring(2, 9),
-              timestamp: new Date().toLocaleTimeString(),
-              type: 'stderr',
-              text: `[ERROR] Process failed: ${data.error}`
-            }
-          ]);
-        }
-      });
-
-      // Setup live system metrics polling every 2.5 seconds
-      const metricsInterval = setInterval(() => {
-        window.llamaAPI?.getSystemInfo().then(setSystemInfo).catch(() => {});
-      }, 2500);
-
-      return () => {
-        clearInterval(metricsInterval);
-        unbindLog();
-        unbindStatus();
+    const unbindLog = apiBridge.onLog((data) => {
+      const entry: LogEntry = {
+        id: Math.random().toString(36).substring(2, 9),
+        timestamp: new Date().toLocaleTimeString(),
+        type: data.type,
+        text: data.text
       };
-    }
+      setLogs(prev => [...prev.slice(-2000), entry]);
+    });
+
+    const unbindStatus = apiBridge.onStatus((data) => {
+      if (data.state === 'stopped') {
+        setIsRunning(false);
+        setLogs(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(36).substring(2, 9),
+            timestamp: new Date().toLocaleTimeString(),
+            type: 'system',
+            text: `[SYSTEM] Process stopped (Exit code: ${data.exitCode})`
+          }
+        ]);
+      } else if (data.state === 'error') {
+        setIsRunning(false);
+        setLogs(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(36).substring(2, 9),
+            timestamp: new Date().toLocaleTimeString(),
+            type: 'stderr',
+            text: `[ERROR] Process failed: ${data.error}`
+          }
+        ]);
+      }
+    });
+
+    // Setup live system metrics polling every 2.5 seconds
+    const metricsInterval = setInterval(() => {
+      apiBridge.getSystemInfo().then(setSystemInfo).catch(() => {});
+    }, 2500);
+
+    return () => {
+      clearInterval(metricsInterval);
+      unbindLog();
+      unbindStatus();
+    };
   }, []);
 
   // Keyboard shortcuts (Ctrl+O, Ctrl+B, F1, F2, F3)
@@ -256,34 +253,27 @@ export function App() {
 
   // Handle Binary Selection
   const handleSelectBinary = async () => {
-    if (window.llamaAPI) {
-      const selected = await window.llamaAPI.openFile({
-        filters: [
-          { name: 'Executables', extensions: ['exe', 'bat', 'cmd', '*'] }
-        ]
-      });
-      if (selected) {
-        setBinaryPath(selected);
-      }
-    } else {
-      const path = prompt('Enter executable path (e.g. C:\\llama\\llama-server.exe):', binaryPath);
-      if (path !== null) setBinaryPath(path);
+    const selected = await apiBridge.openFile({
+      filters: [
+        { name: 'Executables', extensions: ['exe', 'bat', 'cmd', '*'] }
+      ]
+    });
+    if (selected) {
+      setBinaryPath(selected);
     }
   };
 
   // Handle Primary Model Browse
   const handleBrowseModel = async () => {
-    if (window.llamaAPI) {
-      const selected = await window.llamaAPI.openFile({
-        filters: [
-          { name: 'GGUF Models', extensions: ['gguf', 'bin'] },
-          { name: 'All Files', extensions: ['*'] }
-        ]
-      });
-      if (selected) {
-        setFlagValues(prev => ({ ...prev, model: selected }));
-        setEnabledFlags(prev => ({ ...prev, model: true }));
-      }
+    const selected = await apiBridge.openFile({
+      filters: [
+        { name: 'GGUF Models', extensions: ['gguf', 'bin'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    if (selected) {
+      setFlagValues(prev => ({ ...prev, model: selected }));
+      setEnabledFlags(prev => ({ ...prev, model: true }));
     }
   };
 
@@ -298,47 +288,29 @@ export function App() {
   };
 
   const handleBrowseCustomFolder = async () => {
-    if (window.llamaAPI) {
-      const folder = await window.llamaAPI.openDirectory();
-      if (folder && !customFolders.includes(folder)) {
-        const nextFolders = [...customFolders, folder];
-        setCustomFolders(nextFolders);
-        runAutoScan(nextFolders);
-      }
+    const folder = await apiBridge.openDirectory();
+    if (folder && !customFolders.includes(folder)) {
+      const nextFolders = [...customFolders, folder];
+      setCustomFolders(nextFolders);
+      runAutoScan(nextFolders);
     }
   };
 
   // Handle File Browsing for flags
   const handleBrowseFile = async (flagId: string, filters?: { name: string; extensions: string[] }[]) => {
-    if (window.llamaAPI) {
-      const selected = await window.llamaAPI.openFile({ filters });
-      if (selected) {
-        setFlagValues(prev => ({ ...prev, [flagId]: selected }));
-        setEnabledFlags(prev => ({ ...prev, [flagId]: true }));
-      }
-    } else {
-      const path = prompt(`Enter path for flag:`);
-      if (path) {
-        setFlagValues(prev => ({ ...prev, [flagId]: path }));
-        setEnabledFlags(prev => ({ ...prev, [flagId]: true }));
-      }
+    const selected = await apiBridge.openFile({ filters });
+    if (selected) {
+      setFlagValues(prev => ({ ...prev, [flagId]: selected }));
+      setEnabledFlags(prev => ({ ...prev, [flagId]: true }));
     }
   };
 
   // Handle Directory Browsing for flags
   const handleBrowseDirectory = async (flagId: string) => {
-    if (window.llamaAPI) {
-      const selected = await window.llamaAPI.openDirectory();
-      if (selected) {
-        setFlagValues(prev => ({ ...prev, [flagId]: selected }));
-        setEnabledFlags(prev => ({ ...prev, [flagId]: true }));
-      }
-    } else {
-      const path = prompt(`Enter directory path:`);
-      if (path) {
-        setFlagValues(prev => ({ ...prev, [flagId]: path }));
-        setEnabledFlags(prev => ({ ...prev, [flagId]: true }));
-      }
+    const selected = await apiBridge.openDirectory();
+    if (selected) {
+      setFlagValues(prev => ({ ...prev, [flagId]: selected }));
+      setEnabledFlags(prev => ({ ...prev, [flagId]: true }));
     }
   };
 
@@ -367,38 +339,31 @@ export function App() {
 
     const args = buildLlamaArgs(flags, flagValues, enabledFlags, binaryPath);
 
-    if (window.llamaAPI) {
-      const res = await window.llamaAPI.startProcess({
-        binaryPath,
-        args
-      });
-      if (res.success) {
-        setIsRunning(true);
-        setActiveTab('terminal');
-        setLogs(prev => [
-          ...prev,
-          {
-            id: Math.random().toString(36).substring(2, 9),
-            timestamp: new Date().toLocaleTimeString(),
-            type: 'system',
-            text: `[SYSTEM] Launched ${binaryPath} (PID: ${res.pid})`
-          }
-        ]);
-      } else {
-        alert(`Failed to start: ${res.error}`);
-      }
-    } else {
-      alert(`[Demo Mode] Would launch: ${binaryPath} ${args.join(' ')}`);
+    const res = await apiBridge.startProcess({
+      binaryPath,
+      args
+    });
+
+    if (res.success) {
       setIsRunning(true);
       setActiveTab('terminal');
+      setLogs(prev => [
+        ...prev,
+        {
+          id: Math.random().toString(36).substring(2, 9),
+          timestamp: new Date().toLocaleTimeString(),
+          type: 'system',
+          text: `[SYSTEM] Launched ${binaryPath} (PID: ${res.pid})`
+        }
+      ]);
+    } else {
+      alert(`Failed to start: ${res.error}`);
     }
   };
 
   // Stop Process
   const handleStopProcess = async () => {
-    if (window.llamaAPI) {
-      await window.llamaAPI.stopProcess();
-    }
+    await apiBridge.stopProcess();
     setIsRunning(false);
   };
 
@@ -425,13 +390,13 @@ export function App() {
       }, null, 2);
     }
 
-    if (window.llamaAPI) {
-      await window.llamaAPI.saveFile({
-        defaultPath,
-        content,
-        filters: [{ name: format.toUpperCase(), extensions: [format] }]
-      });
-    } else {
+    const savedPath = await apiBridge.saveFile({
+      defaultPath,
+      content,
+      filters: [{ name: format.toUpperCase(), extensions: [format] }]
+    });
+
+    if (!savedPath && typeof window !== 'undefined' && !window.llamaAPI && !('__TAURI_INTERNALS__' in window)) {
       const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

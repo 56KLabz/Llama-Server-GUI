@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { TerminalSquare, X, ExternalLink, Cpu, Sparkles } from 'lucide-react';
+import { apiBridge } from '../utils/apiBridge';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -20,11 +21,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const openLink = (url: string) => {
-    if (window.llamaAPI?.openExternal) {
-      window.llamaAPI.openExternal(url);
-    } else {
-      window.open(url, '_blank');
-    }
+    apiBridge.openExternal(url);
   };
 
   return (
@@ -65,11 +62,11 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div className="flex justify-between">
               <span>Core Engine:</span>
-              <span className="text-slate-200">Electron + llama.cpp</span>
+              <span className="text-slate-200">Tauri v2 (Rust) + llama.cpp</span>
             </div>
             <div className="flex justify-between">
               <span>Platform:</span>
-              <span className="text-slate-200">Windows (x64)</span>
+              <span className="text-slate-200">Windows & Linux</span>
             </div>
           </div>
 
