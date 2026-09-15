@@ -24,6 +24,8 @@ interface HeaderProps {
   onStop: () => void;
   onOpenAssetModal: () => void;
   onOpenThemeModal: () => void;
+  onOpenOpenAiModal?: () => void;
+  onOpenDownloaderModal?: () => void;
   assets: DiscoveredAssets | null;
   onSelectDiscoveredBinary: (bin: DiscoveredBinary) => void;
   onSelectDiscoveredModel: (model: DiscoveredModel) => void;
@@ -41,6 +43,8 @@ export const Header: React.FC<HeaderProps> = ({
   onStop,
   onOpenAssetModal,
   onOpenThemeModal,
+  onOpenOpenAiModal,
+  onOpenDownloaderModal,
   assets,
   onSelectDiscoveredBinary,
   onSelectDiscoveredModel,
@@ -51,6 +55,34 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const modelsCount = assets?.models.length || 0;
   const binariesCount = assets?.binaries.length || 0;
+
+  // Calculate VRAM Fit Status for selected model
+  const selectedModel = assets?.models.find(m => m.path === activeModelPath);
+  const modelSize = selectedModel?.sizeGB || 0;
+  const primaryGpu = systemInfo?.gpus?.[0];
+  const gpuVram = primaryGpu?.vramGB || 0;
+
+  let vramFitStatus: { label: string; color: string } | null = null;
+  if (modelSize > 0 && gpuVram > 0) {
+    // Account for model weights + working context KV buffer (~15%)
+    const estimatedWorkingGB = Number((modelSize * 1.15).toFixed(1));
+    if (estimatedWorkingGB <= gpuVram * 0.9) {
+      vramFitStatus = {
+        label: `100% GPU (~${estimatedWorkingGB}G / ${gpuVram}G)`,
+        color: 'bg-emerald-950/70 text-emerald-300 border-emerald-700/60'
+      };
+    } else if (modelSize <= gpuVram) {
+      vramFitStatus = {
+        label: `Tight Fit (~${estimatedWorkingGB}G / ${gpuVram}G)`,
+        color: 'bg-amber-950/70 text-amber-300 border-amber-700/60'
+      };
+    } else {
+      vramFitStatus = {
+        label: `Needs RAM Offload (${modelSize}G > ${gpuVram}G)`,
+        color: 'bg-rose-950/70 text-rose-300 border-rose-700/60'
+      };
+    }
+  }
 
   // Ensure current active selections are represented in dropdown options even if not in auto-scan
   const binariesList = [...(assets?.binaries || [])];
@@ -133,53 +165,84 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
-        {/* Model Selector */}
-        <div className="flex items-center gap-2 bg-[#0d1017] border border-slate-800 rounded-lg px-3 py-1.5 flex-1 max-w-sm shadow-inner">
-          <Box className="w-4 h-4 text-cyan-400 shrink-0" />
-          <div className="flex-1 min-w-0 text-left">
-            <div className="text-[9px] uppercase font-bold text-slate-500 tracking-wider font-mono">Model Weights (-m)</div>
-            <select
-              value={activeModelPath || ''}
-              onChange={(e) => {
-                const found = modelsList.find(m => m.path === e.target.value);
-                if (found) {
-                  onSelectDiscoveredModel(found);
-                } else if (e.target.value) {
-                  onSelectDiscoveredModel({
-                    name: e.target.value.split(/[/\\]/).pop() || 'Model',
-                    path: e.target.value,
-                    sizeGB: 0,
-                    folder: ''
-                  });
-                }
-              }}
-              className="w-full bg-transparent text-xs font-mono text-slate-200 truncate focus:outline-none cursor-pointer"
-            >
-              {!activeModelPath && <option value="">Select GGUF model...</option>}
-              {modelsList.map((m, i) => (
-                <option key={i} value={m.path} className="bg-[#0d1017]">
-                  {m.name} {m.sizeGB > 0 ? `(${m.sizeGB}GB)` : ''}
-                </option>
-              ))}
-            </select>
+        {/* Model Selector + VRAM Fit Badge */}
+        <div className="flex flex-col flex-1 max-w-md">
+          <div className="flex items-center gap-2 bg-[#0d1017] border border-slate-800 rounded-lg px-3 py-1.5 shadow-inner">
+            <Box className="w-4 h-4 text-cyan-400 shrink-0" />
+            <div className="flex-1 min-w-0 text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider font-mono">Model Weights (-m)</span>
+                {vramFitStatus && (
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${vramFitStatus.color}`}>
+                    {vramFitStatus.label}
+                  </span>
+                )}
+              </div>
+              <select
+                value={activeModelPath || ''}
+                onChange={(e) => {
+                  const found = modelsList.find(m => m.path === e.target.value);
+                  if (found) {
+                    onSelectDiscoveredModel(found);
+                  } else if (e.target.value) {
+                    onSelectDiscoveredModel({
+                      name: e.target.value.split(/[/\\]/).pop() || 'Model',
+                      path: e.target.value,
+                      sizeGB: 0,
+                      folder: ''
+                    });
+                  }
+                }}
+                className="w-full bg-transparent text-xs font-mono text-slate-200 truncate focus:outline-none cursor-pointer"
+              >
+                {!activeModelPath && <option value="">Select GGUF model...</option>}
+                {modelsList.map((m, i) => (
+                  <option key={i} value={m.path} className="bg-[#0d1017]">
+                    {m.name} {m.sizeGB > 0 ? `(${m.sizeGB}GB)` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
+          {onOpenDownloaderModal && (
+            <button
+              onClick={onOpenDownloaderModal}
+              className="px-2.5 py-2 text-xs font-semibold rounded-lg bg-[#0e121a] hover:bg-slate-800 text-cyan-300 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Download verified top GGUF models from Hugging Face"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Get Models</span>
+            </button>
+          )}
+
+          {onOpenOpenAiModal && (
+            <button
+              onClick={onOpenOpenAiModal}
+              className="px-2.5 py-2 text-xs font-semibold rounded-lg bg-[#0e121a] hover:bg-slate-800 text-emerald-300 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Copy endpoint and integration config for external apps (VS Code, LibreChat, Python)"
+            >
+              <Radio className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Connect App</span>
+            </button>
+          )}
+
           <button
             onClick={onOpenAssetModal}
-            className="px-3 py-2 text-xs font-semibold rounded-lg bg-[#0e121a] hover:bg-slate-800 text-amber-300 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="px-2.5 py-2 text-xs font-semibold rounded-lg bg-[#0e121a] hover:bg-slate-800 text-amber-300 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             title="Open Asset Vault to browse all detected models"
           >
             <Scan className="w-3.5 h-3.5 text-amber-400" />
-            <span>Models Vault ({modelsCount})</span>
+            <span>Vault ({modelsCount})</span>
           </button>
 
           <button
             onClick={onOpenThemeModal}
-            className="px-3 py-2 text-xs font-semibold rounded-lg bg-[#0e121a] hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-            title="Change UI Theme (Tokyo Night, Catppuccin, Dracula, Gruvbox, Nord, Cyberpunk, Noir)"
+            className="px-2.5 py-2 text-xs font-semibold rounded-lg bg-[#0e121a] hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Change UI Theme"
           >
             <Palette className="w-3.5 h-3.5 text-cyan-400" />
             <span>Theme</span>

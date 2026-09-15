@@ -18,6 +18,8 @@ import { CustomFlagModal } from './components/CustomFlagModal';
 import { AssetScannerModal } from './components/AssetScannerModal';
 import { AboutModal } from './components/AboutModal';
 import { ThemeModal } from './components/ThemeModal';
+import { OpenAiConfigModal } from './components/OpenAiConfigModal';
+import { ModelDownloaderModal } from './components/ModelDownloaderModal';
 import { ThemeId, applyTheme } from './data/themes';
 import { LogEntry, SystemInfo, DiscoveredAssets, DiscoveredModel, DiscoveredBinary } from './types';
 import { apiBridge } from './utils/apiBridge';
@@ -75,6 +77,8 @@ export function App() {
   const [isAssetModalOpen, setIsAssetModalOpen] = useState<boolean>(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState<boolean>(false);
+  const [isOpenAiModalOpen, setIsOpenAiModalOpen] = useState<boolean>(false);
+  const [isDownloaderModalOpen, setIsDownloaderModalOpen] = useState<boolean>(false);
 
   // Active theme state
   const [currentTheme, setCurrentTheme] = useState<ThemeId>(() => {
@@ -467,6 +471,8 @@ export function App() {
         onStop={handleStopProcess}
         onOpenAssetModal={() => setIsAssetModalOpen(true)}
         onOpenThemeModal={() => setIsThemeModalOpen(true)}
+        onOpenOpenAiModal={() => setIsOpenAiModalOpen(true)}
+        onOpenDownloaderModal={() => setIsDownloaderModalOpen(true)}
         assets={assets}
         onSelectDiscoveredBinary={handleSelectDiscoveredBinary}
         onSelectDiscoveredModel={(m) => handleSelectDiscoveredModel(m, 'model')}
@@ -606,6 +612,20 @@ export function App() {
         onClose={() => setIsThemeModalOpen(false)}
         currentTheme={currentTheme}
         onSelectTheme={(t) => setCurrentTheme(t)}
+      />
+
+      <OpenAiConfigModal
+        isOpen={isOpenAiModalOpen}
+        onClose={() => setIsOpenAiModalOpen(false)}
+        serverHost={currentHost}
+        serverPort={currentPort}
+        apiKey={currentApiKey}
+        activeModelName={currentModelPath ? currentModelPath.split(/[/\\]/).pop() : undefined}
+      />
+
+      <ModelDownloaderModal
+        isOpen={isDownloaderModalOpen}
+        onClose={() => setIsDownloaderModalOpen(false)}
       />
     </div>
   );

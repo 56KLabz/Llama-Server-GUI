@@ -45,6 +45,9 @@ export const ApiPlayground: React.FC<ApiPlaygroundProps> = ({
   const [stream, setStream] = useState(true);
   const [healthStatus, setHealthStatus] = useState<'checking' | 'healthy' | 'unreachable' | 'idle'>('idle');
 
+  const [liveTokensPerSec, setLiveTokensPerSec] = useState<number | null>(null);
+  const [liveTokenCount, setLiveTokenCount] = useState<number>(0);
+
   const endpointHost = serverHost === '0.0.0.0' ? '127.0.0.1' : serverHost;
   const baseUrl = `http://${endpointHost}:${serverPort}`;
 
@@ -71,8 +74,11 @@ export const ApiPlayground: React.FC<ApiPlaygroundProps> = ({
     setMessages(newHistory);
     setInputPrompt('');
     setIsLoading(true);
+    setLiveTokensPerSec(null);
+    setLiveTokenCount(0);
 
     const startTime = performance.now();
+    let firstTokenTime: number | null = null;
 
     try {
       const payload = {
@@ -128,8 +134,20 @@ export const ApiPlayground: React.FC<ApiPlaygroundProps> = ({
                 const parsed = JSON.parse(dataStr);
                 const delta = parsed.choices?.[0]?.delta?.content || '';
                 if (delta) {
+                  if (firstTokenTime === null) {
+                    firstTokenTime = performance.now();
+                  }
+
                   assistantReply += delta;
                   totalTokens++;
+                  setLiveTokenCount(totalTokens);
+
+                  const now = performance.now();
+                  const genDurationMs = now - (firstTokenTime || startTime);
+                  if (genDurationMs > 80 && totalTokens > 1) {
+                    const currentTps = Number(((totalTokens / genDurationMs) * 1000).toFixed(1));
+                    setLiveTokensPerSec(currentTps);
+                  }
 
                   setMessages(prev => {
                     const updated = [...prev];
@@ -147,6 +165,7 @@ export const ApiPlayground: React.FC<ApiPlaygroundProps> = ({
 
         const elapsedMs = Math.round(performance.now() - startTime);
         const tokensPerSec = elapsedMs > 0 ? Number(((totalTokens / elapsedMs) * 1000).toFixed(1)) : 0;
+        setLiveTokensPerSec(tokensPerSec);
 
         setMessages(prev => {
           const updated = [...prev];
@@ -230,6 +249,15 @@ export const ApiPlayground: React.FC<ApiPlaygroundProps> = ({
           </div>
 
           <div className="flex items-center gap-2 font-mono">
+            {/* Live Token Speedometer HUD */}
+            {liveTokensPerSec !== null && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-950/50 border border-amber-500/40 text-amber-300 text-xs font-bold animate-pulse shadow-sm">
+                <Zap className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{liveTokensPerSec} t/s</span>
+                <span className="text-[10px] text-slate-400 font-normal">({liveTokenCount} tok)</span>
+              </div>
+            )}
+
             <button
               onClick={checkHealth}
               className="px-2.5 py-1 text-xs rounded border transition-all flex items-center gap-1.5 cursor-pointer hover:border-white/20"
