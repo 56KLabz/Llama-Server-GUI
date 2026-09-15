@@ -414,13 +414,14 @@ pub async fn start_process(
 // Command: Stop Process
 // -------------------------------------------------------------
 #[tauri::command]
+#[allow(unused_mut)]
 pub async fn stop_process(
     app: AppHandle,
     state: State<'_, ServerProcessState>,
 ) -> Result<StopResult, String> {
     let mut child_lock = state.child.lock().await;
 
-    if let Some(child) = child_lock.take() {
+    if let Some(mut child) = child_lock.take() {
         let pid = child.id();
 
         #[cfg(target_os = "windows")]
@@ -434,6 +435,11 @@ pub async fn stop_process(
 
         #[cfg(not(target_os = "windows"))]
         {
+            if let Some(p) = pid {
+                let _ = std::process::Command::new("kill")
+                    .args(["-9", &p.to_string()])
+                    .output();
+            }
             let _ = child.kill().await;
         }
 
