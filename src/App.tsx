@@ -210,7 +210,13 @@ export function App() {
   // Keyboard shortcuts (Ctrl+O, Ctrl+B, F1, F2, F3)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key.toLowerCase() === 'o') {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setIsAssetModalOpen(true);
+      } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        setIsDownloaderModalOpen(true);
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         handleBrowseModel();
       } else if (e.ctrlKey && e.key.toLowerCase() === 'b') {
@@ -219,6 +225,12 @@ export function App() {
       } else if (e.ctrlKey && e.key.toLowerCase() === 't') {
         e.preventDefault();
         setIsThemeModalOpen(true);
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        setIsHelpModalOpen(true);
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsOpenAiModalOpen(true);
       } else if (e.ctrlKey && e.key === '`') {
         e.preventDefault();
         setShowCommandBar(prev => !prev);

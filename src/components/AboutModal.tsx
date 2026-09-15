@@ -42,17 +42,19 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="p-6 space-y-4 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-xl shadow-amber-500/20 border border-amber-400/40 mx-auto">
-            <TerminalSquare className="w-9 h-9 text-black stroke-[2.5]" />
-          </div>
+          <img 
+            src="/icon.png" 
+            alt="56K Llama" 
+            className="w-16 h-16 rounded-2xl shadow-xl shadow-amber-500/20 border border-amber-400/40 mx-auto object-cover" 
+          />
 
           <div>
             <h3 className="text-base font-bold text-slate-100">Llama Server GUI</h3>
-            <p className="text-xs text-amber-400 font-mono mt-0.5">Version 1.0.0 (Release Build)</p>
+            <p className="text-xs text-amber-400 font-mono mt-0.5">Version 2.0.0 (Release Build)</p>
           </div>
 
           <p className="text-xs text-slate-400 leading-relaxed font-sans">
-            A comprehensive, native Windows control center and options matrix for <code className="text-amber-300 font-mono">llama.cpp</code> and <code className="text-amber-300 font-mono">llama-server</code>.
+            A comprehensive, native desktop cockpit and options matrix for <code className="text-amber-300 font-mono">llama.cpp</code> and <code className="text-amber-300 font-mono">llama-server</code>.
           </p>
 
           <div className="p-3 bg-[#050609] rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1.5 text-left">

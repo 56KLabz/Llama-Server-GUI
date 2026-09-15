@@ -2,7 +2,7 @@
   "name": "llama-server-gui",
   "productName": "Llama Server GUI",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Professional Control Center and GUI for llama.cpp and llama-server",
   "author": "56kLabz",
   "main": "electron/main.cjs",

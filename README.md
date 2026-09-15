@@ -1,8 +1,9 @@
 
 # 🦙 Llama Server GUI
 
-> **The featherweight, high-performance native desktop control deck and flag configurator for `llama-server` and `llama.cpp`. Built with Tauri v2, Rust & React 19.**
+> **The featherweight, high-performance native desktop cockpit and flag configurator for `llama-server` and `llama.cpp`. Built with Tauri v2, Rust & React 19.**
 
+[![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-blue?logo=semver)](https://github.com/56KLabz/Llama-Server-GUI/releases)
 [![Platform: Windows & Linux](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-0078D6?logo=linux)](https://github.com/56KLabz/Llama-Server-GUI)
 [![Engine: llama.cpp](https://img.shields.io/badge/Engine-llama.cpp%20%2F%20llama--server-amber)](https://github.com/ggml-org/llama.cpp)
 [![Backend: Tauri v2 & Rust](https://img.shields.io/badge/Backend-Tauri%20v2%20%2B%20Rust-orange?logo=rust)](https://tauri.app)
@@ -38,13 +39,13 @@ If you already have `llama-server` in your PATH or build folder, skip this step!
 ---
 
 ### Step 2: Download Llama Server GUI
-Grab the latest featherweight installer from the [Releases](https://github.com/56KLabz/Llama-Server-GUI/releases) page:
+Grab the latest featherweight release packages from the [Releases](https://github.com/56KLabz/Llama-Server-GUI/releases) page:
 
 * **Windows**:
-  * **`Llama-Server-GUI-Setup.exe`** (Single standard setup wizard — **only 2.7 MB**! Installs cleanly with desktop shortcut, Start Menu entry, and clean Windows uninstaller)
+  * **`Llama Server GUI_2.0.0_x64-setup.exe`** (Single standard setup wizard — **only 2.7 MB**! Installs cleanly with desktop shortcut, Start Menu entry, and clean Windows uninstaller)
 * **Linux**:
-  * **`Llama-Server-GUI.AppImage`** (Universal portable Linux executable — `chmod +x` and launch)
-  * **`llama-server-gui.deb`** (Ubuntu / Debian package)
+  * **`llama-server-gui_2.0.0_amd64.AppImage`** (Universal portable Linux executable — `chmod +x` and launch)
+  * **`llama-server-gui_2.0.0_amd64.deb`** (Ubuntu / Debian package with desktop icon & menu entry)
 
 ---
 
@@ -107,12 +108,14 @@ You can plug this URL directly into your favorite AI tools:
 | `F1` | Switch to **Options Matrix** |
 | `F2` | Switch to **Console Stream & Logs** |
 | `F3` | Switch to **API Chat Playground** |
+| `Ctrl + K` | Open 1-Click **Connect App** Config Modal |
+| `Ctrl + Shift + D` | Open Curated **Model Downloader Vault** |
+| `Ctrl + Shift + S` | Open Local Models Vault Scanner |
 | `Ctrl + O` | Browse & Open GGUF Model File |
 | `Ctrl + B` | Select Llama Executable Binary |
 | `Ctrl + T` | Open Color Themes Palette |
-| `Ctrl + \`` | Toggle Live Command Preview Bar |
-| `Ctrl + Shift + S` | Open Local Models Vault Scanner |
 | `Ctrl + H` | Ingest Flags Dynamically from `--help` |
+| `Ctrl + \`` | Toggle Live Command Preview Bar |
 
 ---
 
@@ -131,11 +134,13 @@ npm install
 # 3. Launch live hot-reloading desktop development environment
 npm run tauri:dev
 
-# 4. Build optimized production release installers
+# 4. Build optimized production release packages
 npm run tauri:build
 ```
 
-The compiled release packages will be in `src-tauri/target/release/bundle/nsis/`.
+The compiled release packages will be in:
+* **Windows**: `src-tauri/target/release/bundle/nsis/Llama Server GUI_2.0.0_x64-setup.exe`
+* **Linux**: `src-tauri/target/release/bundle/appimage/` and `src-tauri/target/release/bundle/deb/`
 
 ---
 
