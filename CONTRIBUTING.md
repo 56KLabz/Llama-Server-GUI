@@ -22,7 +22,8 @@ Whether you're reporting a bug, adding new `llama.cpp` flags, improving hardware
 ### 1. Prerequisites
 - **Node.js**: v18.0 or higher
 - **npm**: v9.0 or higher
-- **Windows 10/11**: (Currently the primary target platform for `llama-server.exe` hardware orchestration)
+- **Rust**: v1.77.2 or higher (`rustup`)
+- **OS**: Windows 10/11 or Linux (Ubuntu, Debian, Arch, Fedora)
 
 ### 2. Getting the Code
 ```bash
@@ -33,18 +34,18 @@ cd Llama-Server-GUI
 # Install dependencies
 npm install
 
-# Start Vite + Electron in development mode (with hot reloading)
-npm run dev
+# Start Tauri + Vite in development mode (with hot reloading)
+npm run tauri:dev
 ```
 
 ### 3. Testing Production Builds
-Before submitting a pull request, always verify that TypeScript compiles and the production bundle builds cleanly:
+Before submitting a pull request, verify that TypeScript compiles and the Tauri release builds cleanly:
 ```bash
 # Typecheck & build frontend
 npm run build
 
-# Verify electron-builder packaging (optional, tests installer generation)
-npm run dist
+# Build production release packages
+npm run tauri:build
 ```
 
 ---
