@@ -41,8 +41,7 @@ If you already have `llama-server` in your PATH or build folder, skip this step!
 Grab the latest featherweight installer from the [Releases](https://github.com/56KLabz/Llama-Server-GUI/releases) page:
 
 * **Windows**:
-  * **`Llama-Server-GUI-Setup.exe`** (Standard NSIS installer — **only 2.7 MB**!)
-  * **`Llama-Server-GUI.msi`** (Windows Installer package — **4.0 MB**)
+  * **`Llama-Server-GUI-Setup.exe`** (Single standard setup wizard — **only 2.7 MB**! Installs cleanly with desktop shortcut, Start Menu entry, and clean Windows uninstaller)
 * **Linux**:
   * **`Llama-Server-GUI.AppImage`** (Universal portable Linux executable — `chmod +x` and launch)
   * **`llama-server-gui.deb`** (Ubuntu / Debian package)
@@ -86,6 +85,11 @@ You can plug this URL directly into your favorite AI tools:
 ## ✨ Features
 
 - 🚀 **Featherweight Architecture**: Powered by **Tauri v2 + Rust** — uses **~30MB of RAM** and ships as a **2.7 MB installer** (over 95% smaller than traditional Electron wrappers).
+- 🧠 **VRAM "Will It Fit?" Analyzer**: Live working memory calculation (model weights + 15% KV cache buffer) vs your GPU's actual free VRAM (🟢 100% GPU, 🟡 Tight Fit, 🔴 Needs RAM Offload).
+- ⚡ **Live Token Speedometer ($t/s$)**: Real-time generation velocity HUD badge in the Chat Playground with total token count and streaming latency metrics.
+- 🔌 **1-Click "Connect App" Exporter**: Instant copy snippets and configuration templates for Continue.dev, LibreChat, OpenWebUI, and Python OpenAI SDK.
+- 📥 **Curated Model Vault**: Built-in 1-click download modal for verified, top-tier GGUF models (Qwen 2.5, Llama 3.1, DeepSeek R1 Distill).
+- 🗔 **Native System Tray**: Minimizes to the background system tray so your local LLM server stays alive while keeping your desktop spotless.
 - ⚙️ **100+ Configurable Flags**: Visual controls for GPU layer offloading, Flash Attention, KV Cache Quantization (`q8_0`, `q4_0`), samplers (temp, top-k, min-p, mirostat), context sizes, and multi-model router mode (`--models-dir`).
 - ⚡ **Real-Time Hardware Telemetry**: Live header display tracking GPU name, active VRAM usage (`used / total GB`), GPU load %, CPU cores, and system memory.
 - 🔍 **Strict GGUF Asset Vault**: Automatically indexes all `.gguf` weights across your drives while strictly ignoring unrelated binaries.
@@ -131,7 +135,7 @@ npm run tauri:dev
 npm run tauri:build
 ```
 
-The compiled release packages will be in `src-tauri/target/release/bundle/nsis/` and `src-tauri/target/release/bundle/msi/`.
+The compiled release packages will be in `src-tauri/target/release/bundle/nsis/`.
 
 ---
 
